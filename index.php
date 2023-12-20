@@ -13,4 +13,6 @@ function fibonacci(int $amount)
 
 echo '<pre>';
 print_r(fibonacci(10));
-echo '</pre>';
+echo '</pre>' . PHP_EOL;
+$sum_of_fibonacci = array_sum(fibonacci(10));
+echo 'Sum of numbers fibonacci ' . $sum_of_fibonacci;
