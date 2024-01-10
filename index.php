@@ -11,18 +11,16 @@
 <body>
 <?php
     session_start();
-   
-    if (isset($_POST["username"]) && isset($_POST["password"])){
-        $_SESSION['users'][] = [
+    
+    if (!empty($_POST["username"]) && !empty($_POST['password'])) {
+        $newUser = [
             'username' => $_POST['username'],
             'password' => $_POST['password'],
-        ];  
-        $id = count($_SESSION['users']) - 1;
+        ];
+    
+        $_SESSION['users'][] = $newUser;
+        $id = count($_SESSION['users']);
     }
-   
-    // echo "<pre>";
-    //     print_r($_SESSION['users']);
-    // echo "</pre>";
 ?>
 <div class="min-h-screen flex items-center justify-center bg-gray-200">
     <div class="w-full max-w-xs">
@@ -51,6 +49,16 @@
                 </div>
             <?php endif; ?>
         </form>
+
+        <?php if(isset($_SESSION['users'])) : ?>
+        <div class="h-80 overflow-y-auto">
+            <h2 class="text-center font-black">Users (<?php echo count($_SESSION['users']) ?>)</h2>
+            <?php foreach($_SESSION['users'] as $user){ ?>
+            <div>
+                <span class="font-black">Username: </span><?php echo $user['username'] ?>
+            </div>
+            <?php } endif; ?>
+        </div>
     </div>
 </div>
 </body>
