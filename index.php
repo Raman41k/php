@@ -10,16 +10,13 @@
 </head>
 <body>
 <?php
-    session_start();
-    
-    if (!empty($_POST["username"]) && !empty($_POST['password'])) {
-        $newUser = [
-            'username' => $_POST['username'],
-            'password' => $_POST['password'],
-        ];
-    
-        $_SESSION['users'][] = $newUser;
-        $id = count($_SESSION['users']);
+    include_once 'file.php';
+    $fileName = 'data.txt';
+    if ($_POST['username'] && $_POST['password']) {
+        $dataString = $_POST['username'] . '-' . $_POST['password'] . PHP_EOL;
+        $file = fopen($fileName, 'a');
+        fwrite($file,$dataString);
+        fclose($file);
     }
 ?>
 <div class="min-h-screen flex items-center justify-center bg-gray-200">
@@ -43,21 +40,32 @@
                     Sign In
                 </button>
             </div>
-            <?php if($_SESSION['users'][$id]) : ?>
+            <?php if($_POST['username']) : ?>
                 <div class="bg-green-200 text-green-800 p-4 mt-3 rounded-md shadow-md text-xs text-center">
-                    Congratulations <?php echo $_SESSION['users'][$id]['username']?>! You successfully logged in
+                    Congratulations <?php echo $_POST['username'] ?>! You successfully logged in
                 </div>
             <?php endif; ?>
         </form>
 
-        <?php if(isset($_SESSION['users'])) : ?>
+        <?php if(filesize($fileName)) : ?>
         <div class="h-80 overflow-y-auto">
-            <h2 class="text-center font-black">Users (<?php echo count($_SESSION['users']) ?>)</h2>
-            <?php foreach($_SESSION['users'] as $user){ ?>
-            <div>
-                <span class="font-black">Username: </span><?php echo $user['username'] ?>
-            </div>
-            <?php } endif; ?>
+            <h2 class="text-center font-black">Users from file: (<?php echo countLineOfFile($fileName) ?>)</h2>
+            <?php
+            $file = fopen($fileName, "r");
+            if ($file) {
+                while (($line = fgets($file)) !== false) {
+                    $dataArray = explode('-', $line);
+                    $userName = $dataArray[0];
+                    echo "
+                        <div>
+                            <span class='font-black'>Username: </span> " . $userName . " 
+                        </div>
+                    ";
+                }
+                fclose($file);
+            }
+            ?>
+            <?php endif; ?>
         </div>
     </div>
 </div>
