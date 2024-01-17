@@ -3,6 +3,18 @@
 ###############################################################################
 version: '3.1'
 services:
+    database:
+        image: mariadb
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: php
+            MYSQL_USER: roman
+            MYSQL_PASSWORD: roman
+        volumes:
+            - data:/var/lib/mysql
+        ports:
+            - "3305:3306"
+
     webserver:
         image: 'nginx:alpine'
         working_dir: /application
@@ -18,3 +30,5 @@ services:
         volumes:
             - '.:/application'
             - './phpdocker/php-fpm/php-ini-overrides.ini:/etc/php/8.2/fpm/conf.d/99-overrides.ini'
+volumes:
+    data:
