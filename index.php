@@ -91,7 +91,7 @@
                     <strong>${username}</strong>
                     ${created}:
                     <i>${message}</i>
-                    ${is_admin == 1 ? `<a href='?deleted_message_id=${message_id}' data-id='${message_id}' id='deleteMessage' class='absolute top-0 right-0 px-2 py-1 text-red-500 hover:text-red-700'>X</a>` : ''}
+                    ${is_admin === '1' ? `<a href='?deleted_message_id=${message_id}' data-id='${message_id}' id='deleteMessage' class='absolute top-0 right-0 px-2 py-1 text-red-500 hover:text-red-700'>X</a>` : ''}
                 </li>
             `;
 
