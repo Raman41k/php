@@ -9,26 +9,13 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script
+            src="https://code.jquery.com/jquery-3.7.1.min.js"
+            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+            crossorigin="anonymous"></script>
     <title>Messages</title>
 </head>
 <body>
-
-<?php
-    require_once 'database.php';
-    $connection = getConnection();
-
-    if ($_POST) {
-        if ($_SESSION['user']) {
-            addNewMessage($_SESSION['user']['username'], $_POST['message']);
-        } else {
-            addNewMessage($_POST['name'], $_POST['message']);
-        }
-    }
-
-    if ($_GET) {
-        deleteMessage($_GET['deleted_message_id']);
-    }
-?>
 
 <header>
     <nav class="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
@@ -39,7 +26,7 @@
                     <div class='text-gray-800 dark:text-white hover:bg-gray-50 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800'>
                         {$_SESSION['user']['username']}
                     </div>
-                    <a href='logout.php' class='text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'>Logout</a>
+                    <a href='logout.php' id='logout' class='text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'>Logout</a>
                     ";
                 ?>
                 <button data-collapse-toggle="mobile-menu-2" type="button" class="inline-flex items-center p-2 ml-1 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="mobile-menu-2" aria-expanded="false">
@@ -62,21 +49,10 @@
     </nav>
 </header>
 
-<?php
-
-?>
-
+<?php if ($_SESSION['user']) : ?>
 <div class="w-4/5 mx-auto my-5 max-w-xs">
     <form class="bg-white w-full shadow-md rounded px-8 pt-6 pb-8 mb-4" action="" method="post">
-        <?php if (!$_SESSION['user']) : ?>
-        <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
-                Name
-            </label>
-            <input class="shadow appearance-none border  rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                   id="name" type="text" placeholder="Name" name="name">
-        </div>
-        <?php endif; ?>
+
         <div class="">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="message">
                 Message
@@ -93,29 +69,103 @@
         </div>
     </form>
 </div>
+<?php endif; ?>
 
-<?php if (getMessages()): ?>
 <div class="w-4/5 mx-auto my-10">
-    <ul class="w-full text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-        <?php
-        foreach (getMessages() as $message) {
-            echo "<li class='relative w-full px-4 py-2 border-b border-gray-200 rounded-t-lg dark:border-gray-600'>
-            <strong>{$message['username']}</strong>
-            {$message['created']}:
-            <i>{$message['message']}</i>";
-            if ($_SESSION['user']['is_admin']) {
-                echo "<a href='?deleted_message_id={$message['id']}' class='absolute top-0 right-0 px-2 py-1 text-red-500 hover:text-red-700'>X</a>";
-            }
-            echo '</li>';
-        }
-        ?>
+    <ul class="w-full text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" id="messages">
+
     </ul>
 </div>
-<?php endif;?>
 
-<?php
-    mysqli_close($connection);
-?>
+<script>
+    $(document).ready(function () {
+
+        const userName = '<?php echo ($_SESSION['user']['username'])?>';
+        const isAdmin = '<?php echo ($_SESSION['user']['is_admin'])?>';
+        const messagesUl = $('#messages');
+        let messagesCount = null;
+
+        function appendComment(username, created, message, message_id, is_admin) {
+            let messageHtml = `
+                <li class='relative w-full px-4 py-2 border-b border-gray-200 rounded-t-lg dark:border-gray-600'>
+                    <strong>${username}</strong>
+                    ${created}:
+                    <i>${message}</i>
+                    ${is_admin == 1 ? `<a href='?deleted_message_id=${message_id}' data-id='${message_id}' id='deleteMessage' class='absolute top-0 right-0 px-2 py-1 text-red-500 hover:text-red-700'>X</a>` : ''}
+                </li>
+            `;
+
+            messagesUl.append(messageHtml);
+        }
+
+        function getCurrentTimestamp() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = ('0' + (now.getMonth() + 1)).slice(-2);
+            const day = ('0' + now.getDate()).slice(-2);
+            const hours = ('0' + now.getHours()).slice(-2);
+            const minutes = ('0' + now.getMinutes()).slice(-2);
+            const seconds = ('0' + now.getSeconds()).slice(-2);
+
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+
+        $.ajax({
+            url: 'getAllMessages.php',
+            method: 'GET',
+            success: function (response) {
+
+                const messages = response.data;
+                for (const message of messages) {
+                    appendComment(message.username, message.created, message.message, message.id, isAdmin);
+                }
+            }
+        });
+        setTimeout(function () {
+           messagesCount = $('#messages li').length;
+        }, 2000);
+
+
+
+        $('form').submit(function (e) {
+            e.preventDefault();
+
+            const data = {
+                username: userName,
+                message: $(this).find('input[name=message]').val()
+            };
+
+            if (data.username && data.message) {
+                $.ajax({
+                    url: 'addNewMessage.php',
+                    method: 'POST',
+                    data: data,
+                    success: function () {
+                        appendComment(data.username, getCurrentTimestamp(), data.message, messagesCount + 1, isAdmin)
+                        $('form').trigger("reset");
+                    }
+                })
+            }
+        });
+
+        $('body').on('click', '#deleteMessage', function(e){
+            e.preventDefault();
+            let message = $(this).parent();
+            const id = $(this).data('id');
+
+            $.ajax({
+                url: 'deleteMessage.php',
+                method: 'GET',
+                data: { deleted_message_id: id },
+                success: function () {
+                    message[0].remove();
+                },
+            });
+        })
+
+    })
+</script>
 
 </body>
 </html>
