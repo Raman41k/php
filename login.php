@@ -1,10 +1,3 @@
-<?php
-session_start();
-if (isset($_SESSION['user'])) {
-    header('Location: index.php');
-}
-?>
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -13,29 +6,13 @@ if (isset($_SESSION['user'])) {
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script
+            src="https://code.jquery.com/jquery-3.7.1.min.js"
+            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+            crossorigin="anonymous"></script>
     <title>Login</title>
 </head>
 <body>
-<?php
-    require_once 'database.php';
-    $connection = getConnection();
-    if (isset($_POST)) {
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-
-        $sql = "SELECT * FROM users WHERE email = '$email'";
-        $result = mysqli_query($connection, $sql);
-        $user = mysqli_fetch_array($result, MYSQLI_ASSOC);
-        if ($user) {
-            if (password_verify($password, $user['password'])) {
-                session_start();
-                $_SESSION['user'] = $user;
-                header('Location: index.php');
-            }
-        }
-
-    }
-?>
 
 <header>
     <nav class="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
@@ -70,17 +47,19 @@ if (isset($_SESSION['user'])) {
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
                     Email
                 </label>
-                <input class="shadow appearance-none border <?php echo (!$user && $_POST) ? 'border-red-500' : '' ?> rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                        id="email" type="text" placeholder="Email" name="email">
-                <?php if (!$user && $_POST) echo "<p class='text-red-500 text-xs italic my-3'>Email didn't match!</p>";?>
             </div>
             <div class="">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
                     Password
                 </label>
-                <input class="shadow appearance-none border <?php echo (!password_verify($password, $user['password']) && $_POST) ? 'border-red-500' : '' ?> rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                        id="password" type="password" placeholder="******************" name="password">
-                <?php if (!password_verify($password, $user['password']) && $_POST) echo "<p class='text-red-500 text-xs italic my-3'>Incorrect password!</p>";?>
+            </div>
+
+            <div id="user_error" class='hidden p-4 text-center my-3 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400' role='alert'>
+                <span class='font-medium'></span>
             </div>
 
             <div class="flex items-center justify-between">
@@ -89,12 +68,39 @@ if (isset($_SESSION['user'])) {
                     Sign Up
                 </button>
             </div>
-
-            <?php
-                mysqli_close($connection);
-            ?>
         </form>
     </div>
 </div>
+<script>
+    $(document).ready(function () {
+        $('form').submit(function (e) {
+            e.preventDefault();
+
+            const data = {
+                email: $(this).find('input[name=email]').val(),
+                password: $(this).find('input[name=password]').val()
+            };
+
+            if (data.email && data.password) {
+                $.ajax({
+                    url: 'loginUser.php',
+                    method: 'POST',
+                    data: data,
+                    success: function (response) {
+                        if (response.success) {
+                            window.location.href = 'index.php';
+                        } else {
+                            $('#user_error span').text(response.message);
+                            $('#user_error').removeClass('hidden');
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error)
+                    }
+                })
+            }
+        });
+    });
+</script>
 </body>
 </html>

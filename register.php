@@ -6,38 +6,13 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script
+            src="https://code.jquery.com/jquery-3.7.1.min.js"
+            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+            crossorigin="anonymous"></script>
     <title>Registration</title>
 </head>
 <body>
-<?php
-    require_once 'database.php';
-    $connection = getConnection();
-    if (isset($_POST)) {
-        $userName = $_POST['username'];
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-        $repeat_password = $_POST['repeat_password'];
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-        $fieldsEmpty = false;
-        $emailError = false;
-        $passwordsError = false;
-
-        $sql = "SELECT * FROM users WHERE email = '$email'";
-        $result = mysqli_query($connection, $sql);
-        $rowCount = mysqli_num_rows($result);
-
-        if (empty($userName) and empty($email) and empty($password) and empty($repeat_password)) $fieldsEmpty = true;
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $emailError = true;
-        if ($password !== $repeat_password) $passwordsError = true;
-
-        if (!$fieldsEmpty && !$emailError && !$passwordsError && !($rowCount > 0)) {
-            $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-            $stmt = mysqli_stmt_init($connection);
-            $prepareStmt = mysqli_stmt_prepare($stmt, $sql);
-        }
-    }
-?>
 
 <header>
     <nav class="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
@@ -72,34 +47,34 @@
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
                     Username
                 </label>
-                <input class="shadow appearance-none border <?php echo ($fieldsEmpty and $_POST) ? 'border-red-500' : '' ?> rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                        id="username" type="text" placeholder="Username" name="username">
             </div>
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
                     Email
                 </label>
-                <input class="shadow appearance-none border <?php echo (($emailError and $_POST) or $fieldsEmpty and $_POST) ? 'border-red-500' : '' ?> rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                        id="email" type="text" placeholder="Email" name="email">
-                <?php if ($emailError and $_POST and !$fieldsEmpty) echo "<p class='text-red-500 text-xs italic my-3'>Email is incorrect!</p>";?>
             </div>
             <div class="">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
                     Password
                 </label>
-                <input class="shadow appearance-none border <?php echo (($passwordsError and $_POST) or $fieldsEmpty and $_POST) ? 'border-red-500' : '' ?> rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                        id="password" type="password" placeholder="******************" name="password">
             </div>
             <div class="">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="repeat_password">
                     Repeat password
                 </label>
-                <input class="shadow appearance-none border <?php echo ($passwordsError or $fieldsEmpty and $_POST) ? 'border-red-500' : '' ?> rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                        id="repeat_password" type="password" placeholder="******************" name="repeat_password">
             </div>
 
-            <?php if ($fieldsEmpty and $_POST) echo "<p class='text-red-500 text-xs italic mb-3'>Fields are empty!</p>";?>
-            <?php if ($passwordsError and $_POST) echo "<p class='text-red-500 text-xs italic mb-3'>Passwords didn't match!</p>";?>
+            <div id="user_error" class='hidden p-4 text-center my-3 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400' role='alert'>
+                <span class='font-medium'></span>
+            </div>
 
             <div class="flex items-center justify-between">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -107,31 +82,41 @@
                     Sign Up
                 </button>
             </div>
-
-            <?php
-                if ($prepareStmt && !($rowCount > 0)) {
-                    mysqli_stmt_bind_param($stmt, "sss", $userName, $email, $hashedPassword);
-                    mysqli_stmt_execute($stmt);
-                    echo "
-                    <div class='p-4 text-center mt-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400' role='alert'>
-                        <span class='font-medium'>You successfully signed up!
-                    </div>
-                    ";
-                    header('Location: login.php');
-                }
-
-                if ($rowCount > 0) {
-                    echo "
-                    <div class='p-4 text-center mt-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400' role='alert'>
-                        <span class='font-medium'>This email is already registered!
-                    </div>
-                    ";
-                }
-
-                mysqli_close($connection);
-            ?>
         </form>
     </div>
 </div>
+<script>
+    $(document).ready(function () {
+        $('form').submit(function (e) {
+            e.preventDefault();
+
+            const data = {
+                username: $(this).find('input[name=username]').val(),
+                email: $(this).find('input[name=email]').val(),
+                password: $(this).find('input[name=password]').val(),
+                repeat_password: $(this).find('input[name=repeat_password]').val()
+            };
+
+            if (data.username && data.email && data.password && data.repeat_password) {
+                $.ajax({
+                    url: 'registerUser.php',
+                    method: 'POST',
+                    data: data,
+                    success: function (response) {
+                        if (response.success) {
+                            window.location.href = 'index.php';
+                        } else {
+                            $('#user_error span').text(response.message);
+                            $('#user_error').removeClass('hidden');
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error)
+                    }
+                })
+            }
+        });
+    });
+</script>
 </body>
 </html>
