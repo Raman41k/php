@@ -1,35 +1,27 @@
 <?php
+// Algorithm quick sort
+function quickSort(array $array){
+    if(count($array) < 2){
+        return $array;
+    } else {
+        $pivot = $array[0];
+        $less = [];
+        $greater = [];
 
-require_once 'Stack.php';
-require_once 'Queue.php';
+        for($i = 1; $i < count($array); $i++){
+            if($array[$i] <= $pivot) {
+                $less[] = $array[$i];
+            }
 
-echo 'Stack ======================' . PHP_EOL;
-$stack = new Stack;
+            if($array[$i] > $pivot) {
+                $greater[] = $array[$i];
+            }
+        }
 
-$stack->add('item 1');
-$stack->add(2);
-$stack->add('item 3');
+        return array_merge(quickSort($less), [$pivot] , quickSort($greater));
+    }
+}
 
-echo 'Stack count - ' . $stack->count();
-
-echo $stack->get();
-echo $stack->get();
-echo $stack->get();
-echo $stack->get();
-echo 'Stack ======================' . PHP_EOL;
-
- echo 'Queue ======================' . PHP_EOL;
-
- $queue = new Queue;
- $queue->add('item 1');
- $queue->add('item 2');
- $queue->add('item 3');
-
-echo 'Queue count - ' . $queue->count();
-
- echo $queue->get();
- echo $queue->get();
- echo $queue->get();
- echo $queue->get();
-
- echo 'Queue ======================' . PHP_EOL;
+$unsortedArray = [15, 3, 7, 11, 6, 18, 2, 13, 9, 20, 5, 1, 10, 17, 4, 12, 8, 14, 19, 16];
+$sortedArray = quickSort($unsortedArray);
+print_r($sortedArray);
