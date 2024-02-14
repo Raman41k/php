@@ -15,18 +15,18 @@
 
 <?php
     require_once 'database.php';
-    $connection = getConnection();
+    $pdo = getPDO();
 
     if ($_POST) {
         if ($_SESSION['user']) {
-            addNewMessage($_SESSION['user']['username'], $_POST['message']);
+            addNewMessage($pdo, $_SESSION['user']['username'], $_POST['message']);
         } else {
-            addNewMessage($_POST['name'], $_POST['message']);
+            addNewMessage($pdo, $_POST['name'], $_POST['message']);
         }
     }
 
     if ($_GET) {
-        deleteMessage($_GET['deleted_message_id']);
+        deleteMessage($pdo, $_GET['deleted_message_id']);
     }
 ?>
 

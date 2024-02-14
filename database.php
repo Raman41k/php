@@ -14,30 +14,49 @@ function getConnection(){
     return $connection;
 }
 
-function getMessages(): array {
+function getPDO() : PDO{
+    $hostName = 'database';
+    $dbUser = 'roman';
+    $dbPassword = 'roman';
+    $dbName = 'php';
+
+    $pdo = new PDO("mysql:host=$hostName;dbname=$dbName", $dbUser, $dbPassword);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    return $pdo;
+}
+
+function getMessages(PDO $pdo): array {
     $data = [];
     $sql = 'SELECT * FROM messages';
-    $result = getConnection()->query($sql);
 
-    while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+    $queryRunner = $pdo->query($sql);
+    $queryRunner->setFetchMode(PDO::FETCH_ASSOC);
+
+    while($row = $queryRunner->fetch()) {
         $data[] = $row;
     }
 
     return $data;
 }
 
-function addNewMessage($username, $message) {
-    $sql = "INSERT INTO messages (username, message) VALUES (\"$username\", \"$message\")";
+function addNewMessage(PDO $pdo, string $username, string $message) {
+    $sql = "INSERT INTO messages (username, message) VALUES (:name, :message)";
 
-    if (!mysqli_query(getConnection(), $sql)) {
+    $queryRunner = $pdo->prepare($sql);
+    $params = compact('username', 'message');
+
+    if (!$queryRunner->execute($params)) {
         die('Error to add message');
     }
 }
 
-function deleteMessage($messageId) {
-    $sql = 'DELETE FROM messages where id=' . $messageId;
+function deleteMessage(PDO $pdo, int $messageId) {
+    $sql = 'DELETE FROM messages where id=:id';
 
-    if (!mysqli_query(getConnection(), $sql)) {
+    $queryRunner = $pdo->prepare($sql);
+
+    if (!$queryRunner->execute(['id' => $messageId])) {
         die('Error to delete message');
     }
 }
