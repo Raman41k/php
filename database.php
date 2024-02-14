@@ -41,7 +41,8 @@ function getMessages(PDO $pdo): array {
 }
 
 function addNewMessage(PDO $pdo, string $username, string $message) {
-    $sql = "INSERT INTO messages (username, message) VALUES (:name, :message)";
+
+    $sql = "INSERT INTO messages (username, message) VALUES (:username, :message)";
 
     $queryRunner = $pdo->prepare($sql);
     $params = compact('username', 'message');

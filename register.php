@@ -11,32 +11,46 @@
 <body>
 <?php
     require_once 'database.php';
-    $connection = getConnection();
+    $pdo = getPDO();
     if (isset($_POST)) {
         $userName = $_POST['username'];
         $email = $_POST['email'];
         $password = $_POST['password'];
-        $repeat_password = $_POST['repeat_password'];
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $repeatPassword = $_POST['repeat_password'];
 
         $fieldsEmpty = false;
-        $emailError = false;
-        $passwordsError = false;
 
-        $sql = "SELECT * FROM users WHERE email = '$email'";
-        $result = mysqli_query($connection, $sql);
-        $rowCount = mysqli_num_rows($result);
+        if (empty($userName) || empty($email) || empty($password) || empty($repeatPassword)) {
+            $fieldsEmpty = true;
+        } else {
+            if ($password !== $repeatPassword) {
+                $passwordsError = true;
+            } else {
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        if (empty($userName) and empty($email) and empty($password) and empty($repeat_password)) $fieldsEmpty = true;
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $emailError = true;
-        if ($password !== $repeat_password) $passwordsError = true;
+                try {
+                    $sql = "SELECT * FROM users WHERE email = :email";
+                    $queryRunner = $pdo->prepare($sql);
+                    $queryRunner->execute(['email' => $email]);
+                    $user = $queryRunner->fetch();
 
-        if (!$fieldsEmpty && !$emailError && !$passwordsError && !($rowCount > 0)) {
-            $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-            $stmt = mysqli_stmt_init($connection);
-            $prepareStmt = mysqli_stmt_prepare($stmt, $sql);
+                    if ($user) {
+                        $emailError = true;
+                    } else {
+                        $sql = "INSERT INTO users (username, email, password) VALUES (:username, :email, :password)";
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->execute(['username' => $userName, 'email' => $email, 'password' => $hashedPassword]);
+
+                        header('Location: login.php');
+                        exit;
+                    }
+                } catch (PDOException $e) {
+                    echo $e->getMessage();
+                }
+            }
         }
     }
+$pdo = null;
 ?>
 
 <header>
@@ -108,28 +122,28 @@
                 </button>
             </div>
 
-            <?php
-                if ($prepareStmt && !($rowCount > 0)) {
-                    mysqli_stmt_bind_param($stmt, "sss", $userName, $email, $hashedPassword);
-                    mysqli_stmt_execute($stmt);
-                    echo "
-                    <div class='p-4 text-center mt-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400' role='alert'>
-                        <span class='font-medium'>You successfully signed up!
-                    </div>
-                    ";
-                    header('Location: login.php');
-                }
-
-                if ($rowCount > 0) {
-                    echo "
-                    <div class='p-4 text-center mt-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400' role='alert'>
-                        <span class='font-medium'>This email is already registered!
-                    </div>
-                    ";
-                }
-
-                mysqli_close($connection);
-            ?>
+<!--            --><?php
+//                if ($prepareStmt && !($rowCount)) {
+//                    mysqli_stmt_bind_param($stmt, "sss", $userName, $email, $hashedPassword);
+//                    mysqli_stmt_execute($stmt);
+//                    echo "
+//                    <div class='p-4 text-center mt-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400' role='alert'>
+//                        <span class='font-medium'>You successfully signed up!
+//                    </div>
+//                    ";
+//                    header('Location: login.php');
+//                }
+//
+//                if ($rowCount > 0) {
+//                    echo "
+//                    <div class='p-4 text-center mt-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400' role='alert'>
+//                        <span class='font-medium'>This email is already registered!
+//                    </div>
+//                    ";
+//                }
+//
+//                mysqli_close($connection);
+//            ?>
         </form>
     </div>
 </div>

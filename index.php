@@ -19,7 +19,7 @@
 
     if ($_POST) {
         if ($_SESSION['user']) {
-            addNewMessage($pdo, $_SESSION['user']['username'], $_POST['message']);
+            addNewMessage($pdo, htmlspecialchars($_SESSION['user']['username']), htmlspecialchars($_POST['message']));
         } else {
             addNewMessage($pdo, $_POST['name'], $_POST['message']);
         }
@@ -94,11 +94,11 @@
     </form>
 </div>
 
-<?php if (getMessages()): ?>
+<?php if (getMessages($pdo)): ?>
 <div class="w-4/5 mx-auto my-10">
     <ul class="w-full text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
         <?php
-        foreach (getMessages() as $message) {
+        foreach (getMessages($pdo) as $message) {
             echo "<li class='relative w-full px-4 py-2 border-b border-gray-200 rounded-t-lg dark:border-gray-600'>
             <strong>{$message['username']}</strong>
             {$message['created']}:
@@ -114,7 +114,7 @@
 <?php endif;?>
 
 <?php
-    mysqli_close($connection);
+   $pdo = null;
 ?>
 
 </body>
