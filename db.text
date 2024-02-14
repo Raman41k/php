@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS users(
+    id int not null auto_increment,
+    username text not null,
+    email varchar(320) not null,
+    password text not null,
+    is_admin boolean default 0,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS messages(
+    id int not null auto_increment,
+    username text not null,
+    message text not null,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+)
